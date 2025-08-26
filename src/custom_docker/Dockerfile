@@ -36,10 +36,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 
     # --- 2. ROS 저장소 설정 ---
-RUN ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F'"' '{print $4}') && \
-    curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb" && \
-    dpkg -i /tmp/ros2-apt-source.deb && \
-    rm /tmp/ros2-apt-source.deb
+# --- ROS 저장소 설정 (최신 키링 방식) ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gnupg \
+    lsb-release \
+    && \
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null && \
+    rm -rf /var/lib/apt/lists/*
 
 # --- 3. ROS 및 기타 Python 패키지 설치 ---
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -57,7 +62,7 @@ RUN pip install 'numpy<2.0.0'
 
 # --- 4. go2_sdk 소스코드 다운 및 의존성 설치 (사용자가 질문한 부분) ---
 # 작업 디렉토리를 미리 만들고 이동합니다.
-WORKDIR /ros2_ws
+WORKDIR /tmp_ws
 
 # 소스 코드를 src 디렉토리 아래에 클론합니다.
 RUN git clone --depth 1 https://github.com/JHyoonirl/go2_custom_sdk.git src/go2_custom_sdk
@@ -68,11 +73,13 @@ RUN ["/bin/bash", "-c", ". /opt/ros/${ROS_DISTRO}/setup.bash && \
     pip install --no-cache-dir -r src/go2_custom_sdk/requirements.txt && \
     apt-get update && \
     rosdep init && rosdep update && \
-    rosdep install --from-paths src --ignore-src -r -y && \
+    rosdep install --from-paths src --ignore-src -r -y --skip-keys unitree_go && \
     rm -rf /var/lib/apt/lists/*" ]
 
+RUN mkdir -p /root/ros2_ws
+
 # ROS 2 환경 설정
-COPY ./ros_bash.sh /
-RUN chmod +x /ros_bash.sh
-ENTRYPOINT ["/ros_bash.sh"]
+COPY ./ros_bash.sh /root/ros_bash.sh
+RUN chmod +x /root/ros_bash.sh
+ENTRYPOINT ["/root/ros_bash.sh"]
 CMD ["bash"]

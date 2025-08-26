@@ -8,3 +8,5 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 # 전달된 명령 실행
 exec "$@"
+
+echo "ROS 2 Humble sourcing"

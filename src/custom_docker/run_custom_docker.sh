@@ -6,9 +6,9 @@
 DOCKER_IMAGE="my-ros-humble"
 
 # --- 폴더 공유 설정 ---
-# 로컬의 ~/ros_ws 폴더를 컨테이너의 /root/ros_ws 폴더에 연결합니다.
+# 로컬의 go2_custom_sdk 폴더를 컨테이너의 /root/ros_ws 폴더에 연결합니다.
 # 이 경로를 원하는 폴더로 변경하여 사용하세요.
-SHARED_FOLDER="$HOME/ros2_ws"
+SHARED_FOLDER="$HOME/go2_custom_sdk"
 CONTAINER_FOLDER="/root/ros2_ws"
 # --------------------
 
@@ -47,6 +47,8 @@ docker run -it --rm \
     -v "$SHARED_FOLDER:$CONTAINER_FOLDER" \
     --workdir "$CONTAINER_FOLDER" \
     "$DOCKER_IMAGE"
+
+RUN chmod +x /root/ros2_ws/src/custom_docker/ros_bash.sh
 
 echo "-------------------------------------"
 echo "컨테이너가 종료되었습니다."
