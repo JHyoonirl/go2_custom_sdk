@@ -29,7 +29,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'go_node = go2_robot.go_node:main'
+            'go_node = go2_robot.go_node:main',
             'go2_driver_node = go2_robot.go2_driver_node:main',
         ],
     },

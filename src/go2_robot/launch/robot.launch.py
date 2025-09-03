@@ -64,7 +64,7 @@ def generate_launch_description():
 
     urdf_file_name = 'multi_go2.urdf'
     urdf = os.path.join(
-        get_package_share_directory('go2_robot_sdk'),
+        get_package_share_directory('go2_robot'),
         "urdf",
         urdf_file_name)
     with open(urdf, 'r') as infp:
@@ -78,12 +78,12 @@ def generate_launch_description():
     urdf_launch_nodes = []
 
     joy_params = os.path.join(
-        get_package_share_directory('go2_robot_sdk'),
+        get_package_share_directory('go2_robot'),
         'config', 'joystick.yaml'
     )
 
     default_config_topics = os.path.join(
-        get_package_share_directory('go2_robot_sdk'),
+        get_package_share_directory('go2_robot'),
         'config', 'twist_mux.yaml')
 
     # foxglove_launch = os.path.join(
@@ -93,13 +93,13 @@ def generate_launch_description():
     # )
 
     slam_toolbox_config = os.path.join(
-        get_package_share_directory('go2_robot_sdk'),
+        get_package_share_directory('go2_robot'),
         'config',
         'mapper_params_online_async.yaml'
     )
 
     nav2_config = os.path.join(
-        get_package_share_directory('go2_robot_sdk'),
+        get_package_share_directory('go2_robot'),
         'config',
         'nav2_params.yaml'
     )
@@ -108,7 +108,7 @@ def generate_launch_description():
 
         urdf_file_name = 'go2.urdf'
         urdf = os.path.join(
-            get_package_share_directory('go2_robot_sdk'),
+            get_package_share_directory('go2_robot'),
             "urdf",
             urdf_file_name)
         with open(urdf, 'r') as infp:
@@ -178,12 +178,12 @@ def generate_launch_description():
 
         *urdf_launch_nodes,
         Node(
-            package='go2_robot_sdk',
+            package='go2_robot',
             executable='go2_driver_node',
             parameters=[{'robot_ip': robot_ip, 'token': robot_token, "conn_type": conn_type}],
         ),
         # Node(
-        #     package='go2_robot_sdk',
+        #     package='go2_robot',
         #     executable='lidar_to_pointcloud',
         #     parameters=[{'robot_ip_lst': robot_ip_lst, 'map_name': map_name, 'map_save': save_map}],
         # ),
@@ -193,31 +193,31 @@ def generate_launch_description():
             executable='rviz2',
             condition=IfCondition(with_rviz2),
             name='rviz2',
-            arguments=['-d' + os.path.join(get_package_share_directory('go2_robot_sdk'), 'config', rviz_config)]
+            arguments=['-d' + os.path.join(get_package_share_directory('go2_robot'), 'config', rviz_config)]
         ),
-        Node(
-            package='joy',
-            executable='joy_node',
-            condition=IfCondition(with_joystick),
-            parameters=[joy_params]
-        ),
-        Node(
-            package='teleop_twist_joy',
-            executable='teleop_node',
-            name='teleop_node',
-            condition=IfCondition(with_joystick),
-            parameters=[default_config_topics],
-        ),
-        Node(
-            package='twist_mux',
-            executable='twist_mux',
-            output='screen',
-            condition=IfCondition(with_teleop),
-            parameters=[
-                {'use_sim_time': use_sim_time},
-                default_config_topics
-            ],
-        ),
+        # Node(
+        #     package='joy',
+        #     executable='joy_node',
+        #     condition=IfCondition(with_joystick),
+        #     parameters=[joy_params]
+        # ),
+        # Node(
+        #     package='teleop_twist_joy',
+        #     executable='teleop_node',
+        #     name='teleop_node',
+        #     condition=IfCondition(with_joystick),
+        #     parameters=[default_config_topics],
+        # ),
+        # Node(
+        #     package='twist_mux',
+        #     executable='twist_mux',
+        #     output='screen',
+        #     condition=IfCondition(with_teleop),
+        #     parameters=[
+        #         {'use_sim_time': use_sim_time},
+        #         default_config_topics
+        #     ],
+        # ),
 
         # IncludeLaunchDescription(
         #     FrontendLaunchDescriptionSource(foxglove_launch),

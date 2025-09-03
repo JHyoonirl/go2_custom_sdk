@@ -27,7 +27,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/meshes/base_link.STL" />
+          filename="package://go2_robot/meshes/base_link.STL" />
       </geometry>
       <material
         name="">
@@ -140,7 +140,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/hip.dae" />
+          filename="package://go2_robot/dae/hip.dae" />
       </geometry>
       <material
         name="">
@@ -195,7 +195,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/thigh.dae" />
+          filename="package://go2_robot/dae/thigh.dae" />
       </geometry>
       <material
         name="">
@@ -250,7 +250,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/calf.dae" />
+          filename="package://go2_robot/dae/calf.dae" />
       </geometry>
       <material
         name="">
@@ -349,7 +349,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/foot.dae" />
+          filename="package://go2_robot/dae/foot.dae" />
       </geometry>
       <material
         name="">
@@ -399,7 +399,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="3.1415 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/hip.dae" />
+          filename="package://go2_robot/dae/hip.dae" />
       </geometry>
       <material
         name="">
@@ -454,7 +454,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/thigh_mirror.dae" />
+          filename="package://go2_robot/dae/thigh_mirror.dae" />
       </geometry>
       <material
         name="">
@@ -509,7 +509,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/calf_mirror.dae" />
+          filename="package://go2_robot/dae/calf_mirror.dae" />
       </geometry>
       <material
         name="">
@@ -608,7 +608,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/foot.dae" />
+          filename="package://go2_robot/dae/foot.dae" />
       </geometry>
       <material
         name="">
@@ -658,7 +658,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 3.1415 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/hip.dae" />
+          filename="package://go2_robot/dae/hip.dae" />
       </geometry>
       <material
         name="">
@@ -713,7 +713,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/thigh.dae" />
+          filename="package://go2_robot/dae/thigh.dae" />
       </geometry>
       <material
         name="">
@@ -768,7 +768,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/calf.dae" />
+          filename="package://go2_robot/dae/calf.dae" />
       </geometry>
       <material
         name="">
@@ -867,7 +867,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/foot.dae" />
+          filename="package://go2_robot/dae/foot.dae" />
       </geometry>
       <material
         name="">
@@ -917,7 +917,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="3.1415 3.1415 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/hip.dae" />
+          filename="package://go2_robot/dae/hip.dae" />
       </geometry>
       <material
         name="">
@@ -972,7 +972,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/thigh_mirror.dae" />
+          filename="package://go2_robot/dae/thigh_mirror.dae" />
       </geometry>
       <material
         name="">
@@ -1027,7 +1027,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/calf_mirror.dae" />
+          filename="package://go2_robot/dae/calf_mirror.dae" />
       </geometry>
       <material
         name="">
@@ -1126,7 +1126,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/dae/foot.dae" />
+          filename="package://go2_robot/dae/foot.dae" />
       </geometry>
       <material
         name="">
@@ -1236,7 +1236,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/meshes/lidar_link.STL" />
+          filename="package://go2_robot/meshes/lidar_link.STL" />
       </geometry>
       <material
         name="">
@@ -1250,7 +1250,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/meshes/lidar_link.STL" />
+          filename="package://go2_robot/meshes/lidar_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -1289,7 +1289,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/meshes/front_d_camera.STL" />
+          filename="package://go2_robot/meshes/front_d_camera.STL" />
       </geometry>
       <material
         name="">
@@ -1303,7 +1303,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/meshes/front_d_camera.STL" />
+          filename="package://go2_robot/meshes/front_d_camera.STL" />
       </geometry>
     </collision>
   </link>
@@ -1342,7 +1342,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/meshes/left_d_camera.STL" />
+          filename="package://go2_robot/meshes/left_d_camera.STL" />
       </geometry>
       <material
         name="">
@@ -1356,7 +1356,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/meshes/left_d_camera.STL" />
+          filename="package://go2_robot/meshes/left_d_camera.STL" />
       </geometry>
     </collision>
   </link>
@@ -1395,7 +1395,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/meshes/right_d_camera.STL" />
+          filename="package://go2_robot/meshes/right_d_camera.STL" />
       </geometry>
       <material
         name="">
@@ -1409,7 +1409,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://go2_robot_sdk/meshes/right_d_camera.STL" />
+          filename="package://go2_robot/meshes/right_d_camera.STL" />
       </geometry>
     </collision>
   </link>

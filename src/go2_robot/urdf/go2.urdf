@@ -42,10 +42,10 @@ Stephen Brawner (brawner@gmail.com)
       </geometry>
     </collision>
   </link>
-  <!-- <link
+  <link
     name="odom">
-  </link> -->
-  <!-- <joint
+  </link>
+  <joint
     name="odom_joint"
     type="fixed">
     <origin
@@ -55,7 +55,7 @@ Stephen Brawner (brawner@gmail.com)
       link="odom" />
     <child
       link="base_link" />
-  </joint> -->
+  </joint>
 
   <joint name="base_footprint_joint" type="fixed">
     <parent link="base_link"/>
@@ -64,7 +64,7 @@ Stephen Brawner (brawner@gmail.com)
   </joint>
   <link name="base_footprint">
     </link>
-  <!-- <link
+  <link
     name="map">
   </link>
   <joint
@@ -77,7 +77,7 @@ Stephen Brawner (brawner@gmail.com)
       link="map" />
     <child
       link="odom" />
-  </joint> -->
+  </joint>
   <link
     name="Head_upper">
     <inertial>

@@ -67,7 +67,7 @@ class LidarDecoder:
         self.store = Store(Engine(config))
 
         libvoxel_path = os.path.join(
-            get_package_share_directory('go2_robot_sdk'),
+            get_package_share_directory('go2_robot'),
             "external_lib",
             'libvoxel.wasm')
 

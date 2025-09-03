@@ -43,7 +43,6 @@ mkdir -p "$SHARED_FOLDER"
 docker run -it --rm \
     --network host \
     -e DISPLAY=$DISPLAY \
-    -v "$XAUTH_FILE:/root/.Xauthority" \
     -v "$SHARED_FOLDER:$CONTAINER_FOLDER" \
     --workdir "$CONTAINER_FOLDER" \
     "$DOCKER_IMAGE"
