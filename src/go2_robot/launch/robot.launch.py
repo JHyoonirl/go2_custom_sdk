@@ -125,22 +125,22 @@ def generate_launch_description():
                 arguments=[urdf]
             ),
         )
-        urdf_launch_nodes.append(
-            Node(
-                package='pointcloud_to_laserscan',
-                executable='pointcloud_to_laserscan_node',
-                name='pointcloud_to_laserscan',
-                remappings=[
-                    ('cloud_in', 'point_cloud2'),
-                    ('scan', 'scan'),
-                ],
-                parameters=[{
-                    'target_frame': 'base_link',
-                    'max_height': 0.5
-                }],
-                output='screen',
-            ),
-        )
+        # urdf_launch_nodes.append(
+        #     Node(
+        #         package='pointcloud_to_laserscan',
+        #         executable='pointcloud_to_laserscan_node',
+        #         name='pointcloud_to_laserscan',
+        #         remappings=[
+        #             ('cloud_in', 'point_cloud2'),
+        #             ('scan', 'scan'),
+        #         ],
+        #         parameters=[{
+        #             'target_frame': 'base_link',
+        #             'max_height': 0.5
+        #         }],
+        #         output='screen',
+        #     ),
+        # )
 
     else:
 
@@ -157,22 +157,22 @@ def generate_launch_description():
                     arguments=[urdf]
                 ),
             )
-            urdf_launch_nodes.append(
-                Node(
-                    package='pointcloud_to_laserscan',
-                    executable='pointcloud_to_laserscan_node',
-                    name='pointcloud_to_laserscan',
-                    remappings=[
-                        ('cloud_in', f'robot{i}/point_cloud2'),
-                        ('scan', f'robot{i}/scan'),
-                    ],
-                    parameters=[{
-                        'target_frame': f'robot{i}/base_link',
-                        'max_height': 0.1
-                    }],
-                    output='screen',
-                ),
-            )
+            # urdf_launch_nodes.append(
+            #     Node(
+            #         package='pointcloud_to_laserscan',
+            #         executable='pointcloud_to_laserscan_node',
+            #         name='pointcloud_to_laserscan',
+            #         remappings=[
+            #             ('cloud_in', f'robot{i}/point_cloud2'),
+            #             ('scan', f'robot{i}/scan'),
+            #         ],
+            #         parameters=[{
+            #             'target_frame': f'robot{i}/base_link',
+            #             'max_height': 0.1
+            #         }],
+            #         output='screen',
+            #     ),
+            # )
 
     return LaunchDescription([
 
@@ -224,27 +224,27 @@ def generate_launch_description():
         #     condition=IfCondition(with_foxglove),
         # ),
 
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                os.path.join(get_package_share_directory(
-                    'slam_toolbox'), 'launch', 'online_async_launch.py')
-            ]),
-            condition=IfCondition(with_slam),
-            launch_arguments={
-                'slam_params_file': slam_toolbox_config,
-                'use_sim_time': use_sim_time,
-            }.items(),
-        ),
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource([
+        #         os.path.join(get_package_share_directory(
+        #             'slam_toolbox'), 'launch', 'online_async_launch.py')
+        #     ]),
+        #     condition=IfCondition(with_slam),
+        #     launch_arguments={
+        #         'slam_params_file': slam_toolbox_config,
+        #         'use_sim_time': use_sim_time,
+        #     }.items(),
+        # ),
 
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                os.path.join(get_package_share_directory(
-                    'nav2_bringup'), 'launch', 'navigation_launch.py')
-            ]),
-            condition=IfCondition(with_nav2),
-            launch_arguments={
-                'params_file': nav2_config,
-                'use_sim_time': use_sim_time,
-            }.items(),
-        ),
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource([
+        #         os.path.join(get_package_share_directory(
+        #             'nav2_bringup'), 'launch', 'navigation_launch.py')
+        #     ]),
+        #     condition=IfCondition(with_nav2),
+        #     launch_arguments={
+        #         'params_file': nav2_config,
+        #         'use_sim_time': use_sim_time,
+        #     }.items(),
+        # ),
     ])

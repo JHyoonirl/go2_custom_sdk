@@ -11,7 +11,7 @@ from rclpy.qos import QoSProfile, QoSHistoryPolicy, QoSReliabilityPolicy
 
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import Twist, TransformStamped, PoseStamped
-from go2_interfaces.msg import Go2State, IMU
+from go2_interfaces.msg import Go2State
 from unitree_go.msg import LowState, IMUState
 from sensor_msgs.msg import PointCloud2, PointField, JointState, Joy, Imu
 # from sensor_msgs_py import point_cloud2
@@ -35,56 +35,74 @@ class RobotBaseNode(Node):
             depth=1
         )
         
-        self.broadcaster = TransformBroadcaster(self, qos=qos_profile)
-
+        
+        ## Go2 Publishers ##
+        # Go2 URDF sync #
         self.joint_pub = []
         self.go2_state_pub = []
-        self.go2_lidar_pub = []
+        self.broadcaster = TransformBroadcaster(self, qos=qos_profile)
+        
+        # Nav2 & SLAM
+        # self.go2_lidar_pub = []
         self.go2_odometry_pub = []
         self.imu_pub = []
+        
+        # Camera
         self.img_pub = []
         self.camera_info_pub = []
         self.voxel_pub = []
         
+        
+        ## Publishers input ##
+        # Go2 URDF sync #
         self.joint_pub.append(self.create_publisher(
             JointState, 'joint_states', qos_profile))
         
         self.go2_state_pub.append(self.create_publisher(
                 Go2State, 'go2_states', qos_profile))
         
-        self.go2_lidar_pub.append(
-                self.create_publisher(
-                    PointCloud2,
-                    'point_cloud2',
-                    best_effort_qos))
-        
-        self.go2_imu_pubblisher = self.create_publisher(Imu, 'robot_imu', qos_profile)
-        
-        
-        # self.imu_pub.append(self.create_publisher(IMU, 'imu', qos_profile))
+        # Nav2 & SLAM
 
-        # self.broadcaster = TransformBroadcaster(self, qos=qos_profile)
+
+        self.go2_odometry_pub.append(self.create_publisher(
+            Odometry, 'odometry', qos_profile))
+        
+        
+        self.imu_pub.append(self.create_publisher(Imu, 'imu', qos_profile))
+
         self.create_subscription(
             LowState,
             'lowstate',
             self.publish_joint_state_cyclonedds,
             qos_profile)
 
+        
+        
+        self.last_pose = None
+        self.create_subscription(PoseStamped, '/utlidar/robot_pose', self.pose_cb, qos_profile)
+        
+
+        # self.create_subscription(
+        #     PointCloud2,
+        #     '/utlidar/cloud_deskewed',
+        #     self.publish_lidar_cyclonedds,
+        #     qos_profile)
+        
         # self.create_subscription(
         #     PoseStamped,
         #     '/utlidar/robot_pose',
         #     self.publish_body_poss_cyclonedds,
         #     qos_profile)
         
-        self.last_pose = None
-        self.create_subscription(PoseStamped, '/utlidar/robot_pose', self.pose_cb, qos_profile)
+                
+        # self.go2_lidar_pub.append(
+        #         self.create_publisher(
+        #             PointCloud2,
+        #             'point_cloud2',
+        #             best_effort_qos))
+        
         self.create_timer(0.05, self.publish_body_poss_cyclonedds)  # 20Hz
-
-        self.create_subscription(
-            PointCloud2,
-            '/utlidar/cloud_deskewed',
-            self.publish_lidar_cyclonedds,
-            qos_profile)
+        
         
     def pose_cb(self, msg: PoseStamped):
         self.last_pose = msg.pose
@@ -97,12 +115,41 @@ class RobotBaseNode(Node):
         odom_trans.header.stamp = self.get_clock().now().to_msg()
         odom_trans.header.frame_id = 'odom'
         odom_trans.child_frame_id = "base_link"
+        
+        # translation
         odom_trans.transform.translation.x = self.last_pose.position.x
         odom_trans.transform.translation.y = self.last_pose.position.y
         odom_trans.transform.translation.z = self.last_pose.position.z + 0.07
+
+        # rotation
         odom_trans.transform.rotation = self.last_pose.orientation
         
         self.broadcaster.sendTransform(odom_trans)
+
+    def publish_odometry_cyclonedds(self, msg: Odometry):
+        """Publish Odometry topic"""
+        odom_msg = Odometry()
+        odom_msg.header.stamp = self.node.get_clock().now().to_msg()
+        odom_msg.header.frame_id = 'odom'
+
+        # if self.config.conn_mode == 'single':
+        odom_msg.child_frame_id = "base_link"
+        # else:
+            # odom_msg.child_frame_id = f"robot{robot_data.robot_id}/base_link"
+
+        position = self.last_pose.position
+        orientation = self.last_pose.orientation
+
+        odom_msg.pose.pose.position.x = float(position['x'])
+        odom_msg.pose.pose.position.y = float(position['y'])
+        odom_msg.pose.pose.position.z = float(position['z']) + 0.07
+
+        odom_msg.pose.pose.orientation.x = float(orientation['x'])
+        odom_msg.pose.pose.orientation.y = float(orientation['y'])
+        odom_msg.pose.pose.orientation.z = float(orientation['z'])
+        odom_msg.pose.pose.orientation.w = float(orientation['w'])
+        
+        self.go2_odometry_pub[0].publish(odom_msg)
 
     def publish_joint_state_cyclonedds(self, msg:LowState):
         joint_state = JointState()
@@ -130,24 +177,23 @@ class RobotBaseNode(Node):
         # self.get_logger().info('operating')
         self.joint_pub[0].publish(joint_state)
         
-        # go2_imu = Imu()
-        
-        # go2_imu.orientation.w = msg.imu_state.quaternion[0]
-        
-        # go2_imu.orientation.x = msg.imu_state.quaternion[1]
-        # go2_imu.orientation.y = msg.imu_state.quaternion[2]
-        # go2_imu.orientation.z = msg.imu_state.quaternion[3]
-        
-        # self.go2_imu_pubblisher.publish(go2_imu)
+        go2_imu = Imu()
+
+        go2_imu.orientation.w = float(msg.imu_state.quaternion[0])
+        go2_imu.orientation.x = float(msg.imu_state.quaternion[1])
+        go2_imu.orientation.y = float(msg.imu_state.quaternion[2])
+        go2_imu.orientation.z = float(msg.imu_state.quaternion[3])
+
+        self.imu_pub[0].publish(go2_imu)
         
         
         
 
-    def publish_lidar_cyclonedds(self, msg: PointCloud2):
+    # def publish_lidar_cyclonedds(self, msg: PointCloud2):
         
-        msg.header = Header(frame_id="radar")
-        msg.header.stamp = self.get_clock().now().to_msg()
-        self.go2_lidar_pub[0].publish(msg)
+    #     msg.header = Header(frame_id="radar")
+    #     msg.header.stamp = self.get_clock().now().to_msg()
+    #     self.go2_lidar_pub[0].publish(msg)
 
 
 

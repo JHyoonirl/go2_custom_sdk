@@ -44,6 +44,7 @@ docker run -it --rm \
     --network host \
     -e DISPLAY=$DISPLAY \
     -v "$SHARED_FOLDER:$CONTAINER_FOLDER" \
+    --runtime nvidia \
     --workdir "$CONTAINER_FOLDER" \
     "$DOCKER_IMAGE"
 
