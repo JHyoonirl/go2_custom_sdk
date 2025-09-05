@@ -81,27 +81,12 @@ class RobotBaseNode(Node):
         self.last_pose = None
         self.create_subscription(PoseStamped, '/utlidar/robot_pose', self.pose_cb, qos_profile)
         
-
-        # self.create_subscription(
-        #     PointCloud2,
-        #     '/utlidar/cloud_deskewed',
-        #     self.publish_lidar_cyclonedds,
-        #     qos_profile)
+        self.create_timer(0.05, self.publish_cyclonedds)  # 20Hz
         
-        # self.create_subscription(
-        #     PoseStamped,
-        #     '/utlidar/robot_pose',
-        #     self.publish_body_poss_cyclonedds,
-        #     qos_profile)
-        
-                
-        # self.go2_lidar_pub.append(
-        #         self.create_publisher(
-        #             PointCloud2,
-        #             'point_cloud2',
-        #             best_effort_qos))
-        
-        self.create_timer(0.05, self.publish_body_poss_cyclonedds)  # 20Hz
+    def publish_cyclonedds(self):
+        # self.get_logger().info('CycloneDDS mode activated')
+        self.publish_body_poss_cyclonedds()
+        # self.publish_odometry_cyclonedds()
         
         
     def pose_cb(self, msg: PoseStamped):
@@ -122,14 +107,17 @@ class RobotBaseNode(Node):
         odom_trans.transform.translation.z = self.last_pose.position.z + 0.07
 
         # rotation
-        odom_trans.transform.rotation = self.last_pose.orientation
-        
+        odom_trans.transform.rotation.w = self.last_pose.orientation.w
+        odom_trans.transform.rotation.x = self.last_pose.orientation.x
+        odom_trans.transform.rotation.y = self.last_pose.orientation.y
+        odom_trans.transform.rotation.z = self.last_pose.orientation.z
+
         self.broadcaster.sendTransform(odom_trans)
 
-    def publish_odometry_cyclonedds(self, msg: Odometry):
+    def publish_odometry_cyclonedds(self):
         """Publish Odometry topic"""
         odom_msg = Odometry()
-        odom_msg.header.stamp = self.node.get_clock().now().to_msg()
+        odom_msg.header.stamp = self.get_clock().now().to_msg()
         odom_msg.header.frame_id = 'odom'
 
         # if self.config.conn_mode == 'single':
@@ -140,14 +128,14 @@ class RobotBaseNode(Node):
         position = self.last_pose.position
         orientation = self.last_pose.orientation
 
-        odom_msg.pose.pose.position.x = float(position['x'])
-        odom_msg.pose.pose.position.y = float(position['y'])
-        odom_msg.pose.pose.position.z = float(position['z']) + 0.07
+        odom_msg.pose.pose.position.x = float(position.x)
+        odom_msg.pose.pose.position.y = float(position.y)
+        odom_msg.pose.pose.position.z = float(position.z) + 0.07
 
-        odom_msg.pose.pose.orientation.x = float(orientation['x'])
-        odom_msg.pose.pose.orientation.y = float(orientation['y'])
-        odom_msg.pose.pose.orientation.z = float(orientation['z'])
-        odom_msg.pose.pose.orientation.w = float(orientation['w'])
+        odom_msg.pose.pose.orientation.x = float(orientation.x)
+        odom_msg.pose.pose.orientation.y = float(orientation.y)
+        odom_msg.pose.pose.orientation.z = float(orientation.z)
+        odom_msg.pose.pose.orientation.w = float(orientation.w)
         
         self.go2_odometry_pub[0].publish(odom_msg)
 
@@ -176,25 +164,6 @@ class RobotBaseNode(Node):
         ]
         # self.get_logger().info('operating')
         self.joint_pub[0].publish(joint_state)
-        
-        go2_imu = Imu()
-
-        go2_imu.orientation.w = float(msg.imu_state.quaternion[0])
-        go2_imu.orientation.x = float(msg.imu_state.quaternion[1])
-        go2_imu.orientation.y = float(msg.imu_state.quaternion[2])
-        go2_imu.orientation.z = float(msg.imu_state.quaternion[3])
-
-        self.imu_pub[0].publish(go2_imu)
-        
-        
-        
-
-    # def publish_lidar_cyclonedds(self, msg: PointCloud2):
-        
-    #     msg.header = Header(frame_id="radar")
-    #     msg.header.stamp = self.get_clock().now().to_msg()
-    #     self.go2_lidar_pub[0].publish(msg)
-
 
 
 def main():
