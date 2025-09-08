@@ -1,6 +1,7 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -9,6 +10,8 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     with_rviz2 = LaunchConfiguration('rviz2', default='true')
+    with_slam = LaunchConfiguration('slam', default='true')
+    slam_params_file = LaunchConfiguration('slam_params_file')
 
     robot_ip = os.getenv('ROBOT_IP', '')
     conn_type = os.getenv('CONN_TYPE', 'webrtc')
@@ -23,6 +26,12 @@ def generate_launch_description():
         urdf_file_name)
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
+        
+    declare_slam_params_file_cmd = DeclareLaunchArgument(
+        'slam_params_file',
+        default_value=os.path.join(get_package_share_directory("go2_robot"),
+                                   'config', 'mapper_params_online_async.yaml'),
+        description='Full path to the ROS2 parameters file to use for the slam_toolbox node')
 
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
@@ -54,12 +63,23 @@ def generate_launch_description():
         ],
         parameters=[{
             'target_frame': 'base_link', # 스캔 데이터가 생성될 좌표계
-            'min_height': 0.5,         # 바닥면 노이즈 제거를 위해 추가
-            'max_height': 0.7,          # 천장이나 너무 높은 장애물 제거
-            'range_min': 0.3,           # 로봇에 너무 가까운 포인트(노이즈) 제거
+            'min_height': -0.15,         # 바닥면 노이즈 제거를 위해 추가
+            'max_height': 0.15,          # 천장이나 너무 높은 장애물 제거
+            'range_min': 0.1,          # 로봇에 너무 가까운 포인트(노이즈) 제거
+            'range_max': 2.0,          # 최대 감지 거리 설정
             'use_inf': True,            # 측정 범위를 벗어난 거리를 무한대(inf)로 처리
         }],
         output='screen',
+    )
+    
+    start_async_slam_toolbox_node = Node(
+        condition=IfCondition(with_slam),
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='slam_toolbox',
+        output='screen',
+        parameters=[slam_params_file],
+        remappings=[('/odom', '/utlidar/robot_odom')],  # PointCloud to LaserScan 노드의 출력 토픽과 일치시킴
     )
     
     # --- RViz2 노드 ---
@@ -72,8 +92,10 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        declare_slam_params_file_cmd,
         robot_state_publisher_node,
         go2_driver_node,
         pointcloud_to_laserscan_node,
+        start_async_slam_toolbox_node,
         rviz2_node,
     ])

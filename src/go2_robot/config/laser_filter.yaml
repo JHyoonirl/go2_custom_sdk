@@ -1,0 +1,5 @@
+scan_filter_chain:
+- name: downsample
+  type: LaserScanDownsampler
+  params:
+    factor: 2 # 스캔 포인트를 2개 중 1개만 사용 (절반으로 줄임)

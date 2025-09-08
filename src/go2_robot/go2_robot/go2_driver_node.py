@@ -35,7 +35,6 @@ class RobotBaseNode(Node):
             depth=1
         )
         
-        
         ## Go2 Publishers ##
         # Go2 URDF sync #
         self.joint_pub = []
@@ -79,19 +78,20 @@ class RobotBaseNode(Node):
         
         
         self.last_pose = None
-        self.create_subscription(PoseStamped, '/utlidar/robot_pose', self.pose_cb, qos_profile)
+        self.create_subscription(Odometry, '/utlidar/robot_odom', self.odom_cb, qos_profile)
         
         self.create_timer(0.05, self.publish_cyclonedds)  # 20Hz
         
     def publish_cyclonedds(self):
         # self.get_logger().info('CycloneDDS mode activated')
         self.publish_body_poss_cyclonedds()
-        # self.publish_odometry_cyclonedds()
-        
-        
-    def pose_cb(self, msg: PoseStamped):
-        self.last_pose = msg.pose
-        
+        self.publish_odometry_cyclonedds()
+
+
+    def odom_cb(self, msg: Odometry):
+        self.last_pose = msg.pose.pose
+        self.last_odom = msg
+
     def publish_body_poss_cyclonedds(self):
         if self.last_pose is None:
             return
@@ -104,7 +104,7 @@ class RobotBaseNode(Node):
         # translation
         odom_trans.transform.translation.x = self.last_pose.position.x
         odom_trans.transform.translation.y = self.last_pose.position.y
-        odom_trans.transform.translation.z = self.last_pose.position.z + 0.07
+        odom_trans.transform.translation.z = self.last_pose.position.z + 0.035
 
         # rotation
         odom_trans.transform.rotation.w = self.last_pose.orientation.w
@@ -125,18 +125,9 @@ class RobotBaseNode(Node):
         # else:
             # odom_msg.child_frame_id = f"robot{robot_data.robot_id}/base_link"
 
-        position = self.last_pose.position
-        orientation = self.last_pose.orientation
+        odom_msg.pose = self.last_odom.pose
+        odom_msg.twist = self.last_odom.twist
 
-        odom_msg.pose.pose.position.x = float(position.x)
-        odom_msg.pose.pose.position.y = float(position.y)
-        odom_msg.pose.pose.position.z = float(position.z) + 0.07
-
-        odom_msg.pose.pose.orientation.x = float(orientation.x)
-        odom_msg.pose.pose.orientation.y = float(orientation.y)
-        odom_msg.pose.pose.orientation.z = float(orientation.z)
-        odom_msg.pose.pose.orientation.w = float(orientation.w)
-        
         self.go2_odometry_pub[0].publish(odom_msg)
 
     def publish_joint_state_cyclonedds(self, msg:LowState):
