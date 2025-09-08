@@ -19,7 +19,9 @@ setup(
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-        ],
-    },
+    'console_scripts': [
+        'send_sport_commands = go2_sport_ctrl.send_sport_commands:main',
+    ],
+},
+
 )
