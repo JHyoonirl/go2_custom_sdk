@@ -50,6 +50,12 @@ def generate_launch_description():
         executable='go2_driver_node',
         parameters=[{'robot_ip': robot_ip, "conn_type": conn_type}],
     )
+    
+    go2_sport_ctrl_node = Node(
+        package='go2_robot',
+        executable='go2_sport_ctrl_node',
+        # parameters=[{'robot_ip': robot_ip, "conn_type": conn_type}],
+    )
 
     # --- PointCloud to LaserScan 노드 (수정된 부분) ---
     pointcloud_to_laserscan_node = Node(
@@ -95,6 +101,7 @@ def generate_launch_description():
         declare_slam_params_file_cmd,
         robot_state_publisher_node,
         go2_driver_node,
+        go2_sport_ctrl_node,
         pointcloud_to_laserscan_node,
         start_async_slam_toolbox_node,
         rviz2_node,

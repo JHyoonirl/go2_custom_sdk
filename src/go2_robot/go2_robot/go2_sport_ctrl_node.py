@@ -7,6 +7,7 @@ class SportPublisher(Node):
     def __init__(self, mode: str):
         super().__init__('sport_publisher')
         self.publisher_ = self.create_publisher(Request, '/api/sport/request', 10)
+        
 
         # 메시지 생성
         msg = Request()
