@@ -69,11 +69,11 @@ def generate_launch_description():
         ],
         parameters=[{
             'target_frame': 'base_link', # 스캔 데이터가 생성될 좌표계
-            'min_height': -0.15,         # 바닥면 노이즈 제거를 위해 추가
-            'max_height': 0.15,          # 천장이나 너무 높은 장애물 제거
+            'min_height': -0.05,         # 바닥면 노이즈 제거를 위해 추가
+            'max_height': 0.05,          # 천장이나 너무 높은 장애물 제거
             'range_min': 0.1,          # 로봇에 너무 가까운 포인트(노이즈) 제거
-            'range_max': 2.0,          # 최대 감지 거리 설정
-            'use_inf': True,            # 측정 범위를 벗어난 거리를 무한대(inf)로 처리
+            'range_max': 10.0,          # 최대 감지 거리 설정
+            # 'use_inf': True,            # 측정 범위를 벗어난 거리를 무한대(inf)로 처리cc
         }],
         output='screen',
     )
@@ -85,7 +85,7 @@ def generate_launch_description():
         name='slam_toolbox',
         output='screen',
         parameters=[slam_params_file],
-        remappings=[('/odom', '/utlidar/robot_odom')],  # PointCloud to LaserScan 노드의 출력 토픽과 일치시킴
+        # remappings=[('/odom', '/utlidar/robot_odom')],  # PointCloud to LaserScan 노드의 출력 토픽과 일치시킴
     )
     
     # --- RViz2 노드 ---
