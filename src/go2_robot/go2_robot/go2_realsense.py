@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import torch
 import rclpy
 from rclpy.node import Node
@@ -8,10 +5,10 @@ from rclpy.duration import Duration
 from rclpy.time import Time as RclpyTime
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
-from sensor_msgs.msg import Image, PointCloud2, PointField, CameraInfo # 🚨 CameraInfo 임포트
+from sensor_msgs.msg import Image, PointCloud2, PointField
 from std_msgs.msg import Header
 from visualization_msgs.msg import Marker, MarkerArray
-from vision_msgs.msg import Detection3DArray 
+from vision_msgs.msg import Detection3DArray # 이미 이 메시지를 사용 중일 것입니다.
 from cv_bridge import CvBridge
 
 import pyrealsense2 as rs
@@ -27,7 +24,7 @@ from collections import deque
 import struct
 
 # ==============================================================================
-# YOLO 및 CuPy 라이브러리 임포트 (기존 코드 유지)
+# YOLO 및 CuPy 라이브러리 임포트 (선택적)
 # ==============================================================================
 try:
     from ultralytics import YOLO
@@ -42,10 +39,11 @@ except ImportError:
     _CUPY_ENABLED = False
 
 # ==============================================================================
-# 헬퍼 함수 (기존 코드 유지)
+# 헬퍼 함수
 # ==============================================================================
 
 def pointcloud2_to_xyz_array(cloud_msg, remove_nans=True):
+    # ... (기존과 동일)
     fields_offsets = {field.name: field.offset for field in cloud_msg.fields}
     if not all(f in fields_offsets for f in ['x', 'y', 'z']):
         raise ValueError("PointCloud2 message must have 'x', 'y', and 'z' fields.")
@@ -65,6 +63,7 @@ def pointcloud2_to_xyz_array(cloud_msg, remove_nans=True):
     return points_xyz
 
 def create_colored_pointcloud(header, points_xyz, colors_bgr):
+    # ... (기존과 동일)
     assert len(points_xyz) == len(colors_bgr)
     b, g, r = colors_bgr[:, 0], colors_bgr[:, 1], colors_bgr[:, 2]
     rgb_packed = np.array((r.astype(np.uint32) << 16) | (g.astype(np.uint32) << 8) | (b.astype(np.uint32)), dtype=np.uint32)
@@ -98,6 +97,7 @@ def remap_cupy_manual(image_gpu, map1_gpu, map2_gpu):
 
 # CuPy를 사용한 COLORMAP_JET 적용
 def apply_colormap_jet_cupy(normalized_values):
+    # ... (기존과 동일)
     result = cp.zeros((normalized_values.shape[0], 3), dtype=cp.uint8)
     v = cp.array([0.0, 0.35, 0.65, 0.85, 1.0])
     c = cp.array([[128, 0, 0], [255, 0, 0], [0, 255, 255], [0, 0, 255], [0, 0, 128]], dtype=cp.uint8)
@@ -113,14 +113,14 @@ def apply_colormap_jet_cupy(normalized_values):
     return result
 
 # ==============================================================================
-# 메인 통합 노드 클래스 (LidarFusionNode)
+# 메인 통합 노드 클래스
 # ==============================================================================
 
 class LidarFusionNode(Node):
     def __init__(self):
-        super().__init__('go2_realsense_node')
+        super().__init__('lidar_fusion_node')
 
-        # --- 파라미터 선언 및 가져오기 (기존 코드 유지) ---
+        # ... (파라미터 선언 및 가져오기는 기존과 동일) ...
         self.pipeline_started = False
         self.cam_info_loaded = False
 
@@ -131,7 +131,7 @@ class LidarFusionNode(Node):
         self.declare_parameter('fps', 30.0)
         self.declare_parameter('show_preview', False)
         self.declare_parameter('camera_info_path', '')
-        self.declare_parameter('camera_frame', 'front_realsense_camera_link')
+        self.declare_parameter('camera_frame', 'camera_link')
         self.declare_parameter('lidar_frame', 'odom')
         self.declare_parameter('enable_yolo', False)
         self.declare_parameter('yolo_model_path', '')
@@ -168,26 +168,16 @@ class LidarFusionNode(Node):
         self.prev_time_for_fps = None
         self.smoothed_fps = 0.0
 
-        self.cam_info_msg_base = None # 캘리브레이션 데이터가 담긴 기본 메시지
-
-        # --- Publisher 및 Subscriber 설정 (기존 코드 유지) ---
         self.qos_profile = QoSProfile(depth=10)
-        
-        # 1. Image Raw 발행 (ArUco 노드의 입력 영상 소스)
-        raw_image_topic = f'/{self.camera_name}/color/image_raw'
-        self.raw_image_pub = self.create_publisher(Image, raw_image_topic, self.qos_profile)
-        
-        # 2. CameraInfo 발행 🚨 [추가]
-        info_topic = f'/{self.camera_name}/color/camera_info'
-        self.info_pub = self.create_publisher(CameraInfo, info_topic, 1)
-
-        # 3. 기타 Publisher (기존 코드 유지)
+        # self.fused_image_pub = self.create_publisher(Image, f'/camera/{self.camera_name}/fused_image', self.qos_profile)
+        self.raw_image_pub = self.create_publisher(Image, f'/camera/front_realsense_camera/color/image_raw', self.qos_profile)
         self.fused_image_pub = self.create_publisher(Image, f'/camera/front_realsense_camera/color/image_fused', self.qos_profile)
         self.fused_cloud_pub = self.create_publisher(PointCloud2, f'/camera/{self.camera_name}/fused_cloud', self.qos_profile)
 
-        # 4. LiDAR Subscribtion (기존 코드 유지)
+
         custom_lidar_qos = QoSProfile(reliability=QoSReliabilityPolicy.RELIABLE, history=QoSHistoryPolicy.KEEP_LAST, depth=20)
         self.utlidar_sub = self.create_subscription(PointCloud2, '/utlidar/cloud_deskewed', self.lidar_callback, custom_lidar_qos)
+        # self.yrlidar_sub = self.create_subscription(PointCloud2, '/yrl_scan', self.lidar_callback, custom_lidar_qos)
 
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
@@ -198,80 +188,43 @@ class LidarFusionNode(Node):
         self._load_camera_info()
         self._initialize_realsense()
 
-        # --- Frame Reader 및 Timer 설정 ---
         if self.pipeline_started:
             self.is_running = True
             self.frame_reader_thread = threading.Thread(target=self._frame_reader_loop)
             self.frame_reader_thread.daemon = True
             self.frame_reader_thread.start()
-            
             timer_period = 1.0 / self.fps if self.fps > 0 else 0.033
-            
-            # 🚨 [추가] CameraInfo 발행 타이머 설정
-            if self.cam_info_loaded:
-                 self.info_timer = self.create_timer(timer_period, self._publish_camera_info)
-
             self.process_timer = self.create_timer(timer_period, self.process_frame)
 
         self.get_logger().info(f"Lidar Fusion Node initialized. GPU Accelerated: {self.cupy_enabled}")
 
+        # 마커 퍼블리셔 설정 (YOLO가 활성화된 경우에만)
         if self.yolo_enabled:
             self.setup_marker_publisher()
 
     def _load_camera_info(self):
-        """YAML 파일을 읽어 CameraInfo 메시지의 기본 구조를 준비합니다."""
+        # ... (기존과 동일)
         try:
             with open(self.camera_info_path, 'r') as file:
                 cam_params = yaml.safe_load(file)
-                
-            self.camera_matrix_cpu = np.array(cam_params['cameraMatrix']['data'], dtype=np.float32).reshape(3, 3)
-            self.dist_coeffs_cpu = np.array(cam_params['distCoeffs']['data'], dtype=np.float32)
-            self.cam_info_loaded = True
-            
-            # 🚨 [추가] CameraInfo 메시지 기본 구조 생성 (발행 시 타임스탬프만 업데이트)
-            self.cam_info_msg_base = CameraInfo()
-            self.cam_info_msg_base.header.frame_id = self.camera_frame
-            self.cam_info_msg_base.width = self.width
-            self.cam_info_msg_base.height = self.height
-            
-            # K (Intrinsic Matrix)
-            self.cam_info_msg_base.k = self.camera_matrix_cpu.flatten().tolist()
-            
-            # D (Distortion Coefficients)
-            self.cam_info_msg_base.d = self.dist_coeffs_cpu.flatten().tolist()
-            
-            # R (Rectification Matrix) - Identity Matrix (3x3)
-            self.cam_info_msg_base.r = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+                self.camera_matrix_cpu = np.array(cam_params['cameraMatrix']['data'], dtype=np.float32).reshape(3, 3)
+                self.dist_coeffs_cpu = np.array(cam_params['distCoeffs']['data'], dtype=np.float32)
+                self.cam_info_loaded = True
 
-            self.get_logger().info("Camera info loaded successfully for publishing.")
-            
-            # CuPy 관련 맵 로직 (기존 코드 유지)
-            if self.cupy_enabled:
-                import cupy as cp
-                self.camera_matrix_cupy = cp.asarray(self.camera_matrix_cpu)
-                map1_cpu, map2_cpu = cv2.initUndistortRectifyMap(
-                    self.camera_matrix_cpu, self.dist_coeffs_cpu, None, self.camera_matrix_cpu,
-                    (self.width, self.height), cv2.CV_32FC1)
-                self.map1_gpu = cp.asarray(map1_cpu)
-                self.map2_gpu = cp.asarray(map2_cpu)
-            
+                if self.cupy_enabled:
+                    self.camera_matrix_cupy = cp.asarray(self.camera_matrix_cpu)
+                    map1_cpu, map2_cpu = cv2.initUndistortRectifyMap(
+                        self.camera_matrix_cpu, self.dist_coeffs_cpu, None, self.camera_matrix_cpu,
+                        (self.width, self.height), cv2.CV_32FC1)
+                    self.map1_gpu = cp.asarray(map1_cpu)
+                    self.map2_gpu = cp.asarray(map2_cpu)
+
+                self.get_logger().info("Camera info loaded successfully.")
         except Exception as e:
-            self.get_logger().error(f"Failed to load camera info YAML: {e}")
-            self.cam_info_loaded = False
-
-
-    def _publish_camera_info(self):
-        """Image 프레임 레이트에 맞춰 CameraInfo 메시지를 주기적으로 발행합니다."""
-        if self.cam_info_msg_base is not None:
-            now = self.get_clock().now().to_msg()
-            
-            # 🚨 [발행] 타임스탬프만 업데이트하고 발행
-            self.cam_info_msg_base.header.stamp = now
-            self.info_pub.publish(self.cam_info_msg_base)
-
+            self.get_logger().error(f"Failed to load camera info: {e}")
 
     def _initialize_realsense(self):
-        # --- (기존 코드 유지) ---
+        # ... (기존과 동일)
         self.pipeline = rs.pipeline()
         config = rs.config()
         if self.serial_number != '000000000000': config.enable_device(self.serial_number)
@@ -283,55 +236,54 @@ class LidarFusionNode(Node):
         except Exception as e:
             self.get_logger().error(f'RealSense pipeline start failed: {e}'); raise e
 
-
     def initialize_yolo(self):
-        # --- (기존 코드 유지) ---
+        # ... (기존과 동일)
         try:
             self.yolo_model = YOLO(self.yolo_model_path)
             self.get_logger().info("YOLO model loaded successfully.")
         except Exception as e:
             self.get_logger().error(f"Failed to initialize YOLO model: {e}"); self.yolo_enabled = False
 
-
     def lidar_callback(self, msg):
-        # --- (기존 코드 유지) ---
+        # ... (기존과 동일)
         try:
             points_xyz = pointcloud2_to_xyz_array(msg)
             if points_xyz.shape[0] > 0: self.lidar_buffer.append((RclpyTime.from_msg(msg.header.stamp), points_xyz))
         except ValueError as e:
             self.get_logger().warn(f"Could not parse PointCloud2: {e}", throttle_duration_sec=5.0)
 
-
     def _frame_reader_loop(self):
-        """실제 카메라에서 영상을 읽고 Image 메시지를 발행하는 스레드 루프 (기존 코드 유지)"""
+        # ... (기존과 동일)
         while self.is_running and rclpy.ok():
             try:
                 frames = self.pipeline.wait_for_frames(timeout_ms=1000)
                 if not frames: continue
                 color_frame = frames.get_color_frame()
                 if color_frame:
-                    # 원본 이미지 발행 (ArUco 노드의 입력 영상 소스)
+                    # 원본 이미지 발행
                     raw_img_data = np.asanyarray(color_frame.get_data())
                     raw_msg = self.bridge.cv2_to_imgmsg(raw_img_data, encoding="bgr8")
                     raw_msg.header.stamp = self.get_clock().now().to_msg() # 근사 시간
                     raw_msg.header.frame_id = self.camera_frame
-                    self.raw_image_pub.publish(raw_msg) # 🚨 Image 발행!
+                    self.raw_image_pub.publish(raw_msg)
 
-                    # 큐에 데이터 넣기 (기존 융합 로직용)
+                    # 큐에 데이터 넣기
                     try: self.frame_queue.get_nowait()
                     except queue.Empty: pass
                     self.frame_queue.put(raw_img_data)
-                    
             except RuntimeError as e:
                 self.get_logger().warn(f"Frame acquisition error: {e}", throttle_duration_sec=5.0)
 
-
     def setup_marker_publisher(self):
-        """기존 YOLO 마커 퍼블리셔 설정 (기존 코드 유지)"""
+        """
+        마커 발행에 필요한 파라미터와 퍼블리셔를 초기화합니다.
+        (기존 노드의 __init__ 마지막 부분에서 호출하세요.)
+        """
         self.get_logger().info('Setting up YOLO marker publisher...')
-        
+
         # --- 마커 관련 파라미터 선언 ---
-        self.declare_parameter('marker_target_class_id', 'person') 
+        # (기존 노드의 파라미터와 이름이 겹치지 않도록 'marker_' 접두사 사용)
+        self.declare_parameter('marker_target_class_id', 'person') # 이 파라미터는 현재 사용되지 않음 (클래스 0으로 하드코딩)
         self.declare_parameter('marker_scale', 0.4)
         self.declare_parameter('marker_lifetime', 0.5)
 
@@ -345,32 +297,40 @@ class LidarFusionNode(Node):
         # --- 마커 발행 퍼블리셔 ---
         self.marker_publisher_ = self.create_publisher(
             MarkerArray,
-            '/yolo_markers',
+            '/yolo_markers',  # RViz에서 구독할 토픽
             10)
+
+        # 마지막에 발행한 마커 수를 추적 (오래된 마커 삭제용)
         self.last_marker_count_ = 0
 
-
     def publish_simple_markers(self, object_positions: list, header: Header):
-        """기존 YOLO 마커 발행 함수 (기존 코드 유지)"""
+        """
+        Calculated object_positions list [(pos, count), ...]를 받아
+        RViz 마커로 직접 변환 후 발행합니다.
+        (기존 publish_yolo_markers 함수를 대체합니다)
+        """
         marker_array = MarkerArray()
         current_marker_id = 0
 
         # object_positions는 (pos, count) 튜플의 리스트입니다.
         for (pos, count) in object_positions:
+            # --- 대상 객체에 대한 마커 생성 ---
             marker = Marker()
-            marker.header = header
-            marker.ns = "person_detections"
+            marker.header = header # process_frame에서 받은 헤더 사용
+            marker.ns = "person_detections" # 네임스페이스는 동일하게 유지
             marker.id = current_marker_id
             current_marker_id += 1
 
             marker.type = Marker.SPHERE
             marker.action = Marker.ADD
 
+            # [핵심] 'pos' (x,y,z)를 직접 pose.position에 할당
             marker.pose.position.x = float(pos[0])
             marker.pose.position.y = float(pos[1])
             marker.pose.position.z = float(pos[2])
             marker.pose.orientation.w = 1.0 # 기본 방향
 
+            # 기존 마커 파라미터 사용
             marker.scale.x = self.marker_scale_
             marker.scale.y = self.marker_scale_
             marker.scale.z = self.marker_scale_
@@ -385,6 +345,7 @@ class LidarFusionNode(Node):
             marker_array.markers.append(marker)
 
         # --- 이전에 발행된 마커 중 불필요한 마커 삭제 ---
+        # (이 로직은 self.last_marker_count_를 사용하므로 동일하게 유지)
         if self.last_marker_count_ > current_marker_id:
             for i in range(current_marker_id, self.last_marker_count_):
                 delete_marker = Marker()
@@ -396,20 +357,25 @@ class LidarFusionNode(Node):
 
         self.last_marker_count_ = current_marker_id
 
+        # 생성된 마커 배열 발행
         self.marker_publisher_.publish(marker_array)
 
-
     def calculate_object_positions(self, yolo_boxes_xyxy, pixel_x, pixel_y, points_camera_frame, is_gpu_array=False):
-        """기존 YOLO 위치 계산 함수 (기존 코드 유지)"""
+        """
+        YOLO 바운딩 박스 내의 LiDAR 포인트들의 평균 카메라 좌표계 위치를 계산합니다.
+        [수정] 배경/아웃라이어 포인트 제거를 위해 Z-좌표의 중앙값(Median)을 기준으로
+               +/- 30% 범위 내의 포인트들만 필터링하여 평균을 계산합니다.
+        """
         lib = cp if is_gpu_array else np
         object_positions = []
 
         if yolo_boxes_xyxy is None or yolo_boxes_xyxy.shape[0] == 0 or pixel_x.shape[0] == 0:
             return object_positions
 
-        if hasattr(yolo_boxes_xyxy, 'cpu'): 
+        # YOLO 박스가 GPU에 있으면 CPU로 복사
+        if hasattr(yolo_boxes_xyxy, 'cpu'): # PyTorch 텐서인지 확인
             boxes_cpu = yolo_boxes_xyxy.cpu().numpy()
-        else:
+        else: # 이미 NumPy 배열이라고 가정
             boxes_cpu = yolo_boxes_xyxy
 
         for box in boxes_cpu:
@@ -426,36 +392,45 @@ class LidarFusionNode(Node):
                 continue
 
             elif num_points_in_box <= 5:
+                # 포인트가 너무 적으면 통계적 필터링이 무의미하므로 단순 평균 사용
                 average_position = lib.mean(points_in_box, axis=0)
                 num_filtered_points = num_points_in_box
 
             else:
+                # [수정] Z-좌표의 중앙값(Median)을 사용하여 아웃라이어(배경) 필터링
                 z_points = points_in_box[:, 2]
-                median_z = lib.median(z_points)
-                z_threshold = lib.maximum(0.3 * median_z, 0.1) 
 
+                # 중앙값 계산 (아웃라이어에 강건함)
+                median_z = lib.median(z_points)
+
+                # 중앙값의 30%를 임계값(threshold)으로 설정 (너무 작지 않게 최소값 보장)
+                z_threshold = lib.maximum(0.3 * median_z, 0.1) # 최소 10cm
+
+                # Z좌표가 (중앙값 - 임계값) ~ (중앙값 + 임계값) 범위 내에 있는 포인트만 선택
                 filter_mask = (lib.abs(z_points - median_z) < z_threshold)
 
                 filtered_points = points_in_box[filter_mask]
                 num_filtered_points = filtered_points.shape[0]
 
                 if num_filtered_points > 0:
+                    # 필터링된 포인트들의 평균 위치 계산
                     average_position = lib.mean(filtered_points, axis=0)
                 else:
+                    # 필터링 후 남은 포인트가 없으면 이 객체는 무시
                     continue
 
+            # GPU 결과인 경우 CPU로 복사
             if is_gpu_array:
                 average_position = cp.asnumpy(average_position)
 
-            average_position[1] = 0.0 # [요청 사항] X 좌표를 0으로 고정하여 YZ 평면에 투영 (원래 X를 0으로 고정했는지 Y를 0으로 고정했는지 확인 필요)
+            # [요청 사항] X 좌표를 0으로 고정하여 YZ 평면에 투영
+            average_position[1] = 0.0
 
             object_positions.append((average_position, num_filtered_points))
 
         return object_positions
 
-
     def process_frame(self):
-        """기존 LiDAR 융합 및 YOLO 처리 메인 루프 (기존 코드 유지)"""
         now = self.get_clock().now()
         if self.prev_time_for_fps is not None:
             dt = (now - self.prev_time_for_fps).nanoseconds / 1e9
@@ -471,14 +446,14 @@ class LidarFusionNode(Node):
             trans = self.tf_buffer.lookup_transform(self.camera_frame, self.lidar_frame, RclpyTime(), timeout=Duration(seconds=0.05))
             t = trans.transform.translation; q = trans.transform.rotation
             self.lidar_to_cam_matrix[:3, :3] = Rotation.from_quat([q.x, q.y, q.z, q.w]).as_matrix()
-            self.lidar_to_cam_matrix[:3, 3] = [t.x + 0.04, t.y-0.06, t.z]
+            self.lidar_to_cam_matrix[:3, 3] = [t.x, t.y, t.z]
         except tf2_ros.TransformException as ex:
             self.get_logger().warn(f'TF lookup failed: {ex}', throttle_duration_sec=1.0)
             if self.show_preview: cv2.imshow(f"Fused Stream", frame_cpu); cv2.waitKey(1)
             return
 
         yolo_results = None
-        object_positions = [] 
+        object_positions = [] # [신규] 두 경로에서 공통으로 사용할 변수 초기화
 
         if self.cupy_enabled:
             # --- GPU 경로 ---
@@ -490,6 +465,7 @@ class LidarFusionNode(Node):
                 # 2. YOLO 처리 (먼저 실행)
                 if self.yolo_enabled:
                     processed_image_for_yolo = cp.asnumpy(undistorted_gpu)
+                    # [수정] classes=0 (person)만 감지, conf=0.5 이상
                     yolo_results = self.yolo_model(processed_image_for_yolo, classes=0, conf=0.5, verbose=False)
                     processed_image = yolo_results[0].plot()
                 else:
@@ -526,7 +502,7 @@ class LidarFusionNode(Node):
                             final_points_cam_gpu = points_cam_frame_valid_z_gpu[bounds_mask_gpu]
                             final_points_lidar_gpu = points_lidar_valid_z_gpu[bounds_mask_gpu]
 
-                            valid_px_gpu = px_gpu[bounds_mask_gpu]
+                            valid_px_gpu = px_gpu[bounds_mask_gpu] # [수정] int 캐스팅 제거 (계산 함수에서 처리)
                             valid_py_gpu = py_gpu[bounds_mask_gpu]
                             valid_z_gpu = z_values_gpu[bounds_mask_gpu]
 
@@ -537,15 +513,17 @@ class LidarFusionNode(Node):
                                 max_z = cp.max(valid_z_gpu)
                                 range_z = max_z - min_z
 
-                                if range_z > 1e-5:
+                                if range_z > 1e-5: # 0으로 나누기 방지
                                     norm_z_gpu = (valid_z_gpu - min_z) / range_z
                                 else:
-                                    norm_z_gpu = cp.full_like(valid_z_gpu, 0.5)
+                                    norm_z_gpu = cp.full_like(valid_z_gpu, 0.5) # 모두 같은 깊이면 중간색
 
                                 norm_z_gpu = cp.clip(norm_z_gpu, 0.0, 1.0)
+                                # [기존] norm_z_gpu = cp.clip(valid_z_gpu / 3.0, 0.0, 1.0) # 3m 기준으로 정규화
+
                                 colors_gpu = apply_colormap_jet_cupy(norm_z_gpu)
 
-                                # CPU로 복사
+                                # CPU로 복사 (이미지 표기 및 PCL 생성용)
                                 valid_px_cpu = cp.asnumpy(valid_px_gpu).astype(np.int32)
                                 valid_py_cpu = cp.asnumpy(valid_py_gpu).astype(np.int32)
                                 colors_cpu = cp.asnumpy(colors_gpu)
@@ -562,11 +540,12 @@ class LidarFusionNode(Node):
                                 if self.yolo_enabled and yolo_results:
                                     object_positions = self.calculate_object_positions(
                                         yolo_results[0].boxes.xyxy,
-                                        valid_px_gpu, 
+                                        valid_px_gpu, # int 캐스팅 전의 float 값 전달
                                         valid_py_gpu,
                                         final_points_cam_gpu,
                                         is_gpu_array=True
                                     )
+                                    # (로깅은 메시지 발행 후로 이동)
 
             except Exception as e:
                 self.get_logger().error(f"GPU processing failed: {e}\n{traceback.format_exc()}", throttle_duration_sec=2.0)
@@ -577,6 +556,7 @@ class LidarFusionNode(Node):
             undistorted_image = cv2.undistort(frame_cpu, self.camera_matrix_cpu, self.dist_coeffs_cpu)
 
             if self.yolo_enabled:
+                # [수정] classes=0 (person)만 감지, conf=0.5 이상
                 yolo_results = self.yolo_model(undistorted_image, classes=0, conf=0.5, verbose=False)
                 processed_image = yolo_results[0].plot()
             else:
@@ -620,12 +600,14 @@ class LidarFusionNode(Node):
                             max_z = np.max(valid_z)
                             range_z = max_z - min_z
 
-                            if range_z > 1e-5:
+                            if range_z > 1e-5: # 0으로 나누기 방지
                                 norm_z = (valid_z - min_z) / range_z
                             else:
-                                norm_z = np.full_like(valid_z, 0.5) 
+                                norm_z = np.full_like(valid_z, 0.5) # 모두 같은 깊이면 중간값
 
                             norm_z = np.clip(norm_z, 0, 1)
+                            # [기존] norm_z = np.clip(valid_z / 3.0, 0, 1)
+
                             norm_z_scaled = (norm_z * 255).astype(np.uint8)
                             colors = cv2.applyColorMap(norm_z_scaled, cv2.COLORMAP_JET).reshape(-1, 3)
 
@@ -643,19 +625,24 @@ class LidarFusionNode(Node):
                             if self.yolo_enabled and yolo_results:
                                 object_positions = self.calculate_object_positions(
                                     yolo_results[0].boxes.xyxy,
-                                    valid_px_float, 
+                                    valid_px_float, # int 캐스팅 전의 float 값 전달
                                     valid_py_float,
                                     final_points_cam,
                                     is_gpu_array=False
                                 )
+                                # (로깅은 메시지 발행 후로 이동)
 
         # ======================================================================
         # 6. [신규] YOLO 마커 발행
         # ======================================================================
         if self.yolo_enabled and object_positions:
+            # 헤더 생성: 타임스탬프는 현재 시간, 프레임 ID는 카메라 프레임
             marker_header = Header(stamp=now.to_msg(), frame_id=self.camera_frame)
             self.publish_simple_markers(object_positions, marker_header)
-        
+
+            # (디버깅 로그)
+            # self.get_logger().info(f"Published {len(object_positions)} markers.")
+
         # ======================================================================
         # 7. 최종 이미지 발행 (기존 로직)
         # ======================================================================
@@ -689,7 +676,7 @@ def main(args=None):
     except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         pass
     except Exception as e:
-        print(f"Node initialization/execution failed: {e}\n{traceback.format_exc()}")
+        print(f"Node initialization failed: {e}\n{traceback.format_exc()}")
     finally:
         if node:
             node.destroy_node()

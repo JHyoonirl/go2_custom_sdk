@@ -162,7 +162,7 @@ Stephen Brawner (brawner@gmail.com)
     </inertial>
   </link>
   <joint name="front_camera_to_front_realsense_joint" type="fixed">
-    <origin xyz="-0.02909936 -0.06333103 0.00976318" rpy="0.04475 -0.03469 -0.00758" />
+    <origin xyz="-0.08 0.0 0.00976318" rpy="0.04475 -0.03469 -0.00758" />
     <parent link="front_camera" />
     <child link="front_realsense_camera_link" />
     <axis xyz="0 0 0" />

@@ -245,19 +245,23 @@ def generate_launch_description():
     )
 
     # --- 🚨 [추가] ArUco TF 발행 노드 ---
-    # go2_realsense_node의 출력을 구독하도록 설정
+
     hs_aruco_marker_node = Node(
         package='ros2_aruco',
         executable='hs_aruco_node', 
         name='hs_aruco_node',
         parameters=[{
-            'marker_size': 0.1,                                           # 10cm 마커
-            'aruco_dictionary_id': 'DICT_6X6_250',                        # 6x6 딕셔너리
-            'camera_frame': camera_frame_name,                            # front_realsense_camera_link
-            
-            # go2_realsense_node가 발행하는 토픽 이름에 맞춰 구독
-            'image_topic': '/camera/' + camera_name + '/color/image_raw',        # /realsense_camera/color/image_raw
-            'camera_info_topic': '/' + camera_name + '/color/camera_info',  # /realsense_camera/color/camera_info
+            'marker_size': 0.1,
+            'aruco_dictionary_id': 'DICT_6X6_250',
+            'camera_frame': camera_frame_name, # front_realsense_camera_link
+
+            # 1. Image Topic 구독 (go2_realsense_node와 통일)
+            'image_topic': '/camera/' + camera_name + '/color/image_raw',  
+
+            # 2. 🚨 [제거] CameraInfo 토픽 구독 파라미터는 제거합니다.
+
+            # 3. 🚨 [추가] YAML 파일 경로를 새로운 파라미터로 전달합니다.
+            'calibration_file_path': camera_info_path, # Launch 파일 상단에서 정의된 변수 사용
         }],
         output='screen'
     )

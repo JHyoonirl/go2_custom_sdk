@@ -281,7 +281,7 @@ class CuPyPointCloudToLaserScan(Node):
                 valid_ranges = ranges[range_mask]
                 valid_angles = angles[range_mask]
                 # self.get_logger().info(f'pointcloud input received. processing...{points_filtered.shape[0]} points')
-                self.get_logger().info(f'pointcloud input received. processing...{valid_ranges.shape[0]} points')
+                # self.get_logger().info(f'pointcloud input received. processing...{valid_ranges.shape[0]} points')
                 if valid_ranges.shape[0] == 0:
                     self.publish_empty_scan(msg.header.stamp); return
                 

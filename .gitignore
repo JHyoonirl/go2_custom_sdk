@@ -1,3 +1,7 @@
 build/
 install/
 log/
+src/yrl3_v2_ros2_package/
+src/iceoryx/
+src/vision_opencv/
+src/realsense-ros/
