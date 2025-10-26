@@ -8,15 +8,33 @@
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
-  <depend>go2_interfaces</depend>
+  <!-- <depend>torch</depend> -->
+  <!-- <depend>go2_interfaces</depend> -->
   <depend>unitree_go</depend>
   <depend>unitree_api</depend>
+  <depend>eigen</depend>
+  <depend>builtin_interfaces</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <depend>librealsense2</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>realsense2_camera</depend>
+  <depend>realsense2_camera_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>diagnostic_updater</depend>
+  <depend>yrl3_v2_ros2_package</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
+  <!-- <test_depend>pyrealsense2</test_depend> -->
 
   <export>
     <build_type>ament_python</build_type>

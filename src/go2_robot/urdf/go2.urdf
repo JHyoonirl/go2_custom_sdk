@@ -138,7 +138,35 @@ Stephen Brawner (brawner@gmail.com)
     <parent link="Head_upper" />
     <child link="front_camera" />
     <axis xyz="0 0 0" />
-  </joint>  
+  </joint>
+  <link name="front_realsense_camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.025 0.09 0.025" />
+      </geometry>
+      <material name="realsense_color">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.025 0.09 0.025" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.094" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-5" />
+    </inertial>
+  </link>
+  <joint name="front_camera_to_front_realsense_joint" type="fixed">
+    <origin xyz="-0.02909936 -0.06333103 0.00976318" rpy="0.04475 -0.03469 -0.00758" />
+    <parent link="front_camera" />
+    <child link="front_realsense_camera_link" />
+    <axis xyz="0 0 0" />
+  </joint> 
   <link
     name="Head_lower">
     <inertial>
@@ -1213,6 +1241,35 @@ Stephen Brawner (brawner@gmail.com)
     <axis
       xyz="0 0 0" />
   </joint>
+  <link
+    name="yujin_lidar">
+        <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia ixx="1.0E-6" ixy="0" ixz="0" iyy="1.0E-6" iyz="0" izz="1.0E-6" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+            <cylinder radius="0.03" length="0.05" />
+        </geometry>
+        <material name="lidar_color">
+            <color rgba="0.0 0.0 0.8 1.0" />
+        </material>
+    </visual>
+  </link>
+  <joint
+    name="yujin_lidar_joint"
+    type="fixed">
+    <origin
+      xyz="-0.124017 0 0.30050"
+      rpy="0 0 3.3" />
+    <parent
+      link="base_link" />
+    <child
+      link="yujin_lidar" />
+  </joint>
+
   <link
     name="imu">
     <inertial>

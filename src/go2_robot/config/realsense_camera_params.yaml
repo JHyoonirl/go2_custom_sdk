@@ -1,0 +1,22 @@
+# Camera intrinsic parameters
+cameraMatrix:
+  rows: 3
+  cols: 3
+  dt: d
+  data: [ 932.2387629137814, 0., 635.0162682041426, 0.,
+      933.5658909993595, 368.29823950658846, 0., 0., 1. ]
+
+# Camera distortion coefficients
+distCoeffs:
+  rows: 5
+  cols: 1
+  dt: d
+  data: [ 0.0982710706111068, -0.185906718218666, -0.0006838843275465074,
+      -8.191235219107523e-06, 0. ]
+
+# Calibration results
+imageSize:
+  width: 1280
+  height: 720
+avg_reprojection_error: 0.6540716587680178
+num_calibration_frames: 67

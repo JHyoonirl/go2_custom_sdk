@@ -1,0 +1,5 @@
+# my_realsense_config.yaml
+camera/front_realsense_camera:
+  ros__parameters:
+    # 이 이름이 URDF의 최종 링크 이름과 정확히 일치해야 합니다.
+    base_frame_id: "front_realsense_camera_link" 
